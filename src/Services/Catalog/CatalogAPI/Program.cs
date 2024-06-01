@@ -1,16 +1,20 @@
+using BuildingBlocks.Behaviors;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCarter();
 
-builder.Services.AddMarten(options =>
-{
-    options.Connection(builder.Configuration.GetConnectionString("Database")!);
-}).UseLightweightSessions();
+var currentAssembly = typeof(Program).Assembly;
 
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssemblies(typeof(Program).Assembly);
+    config.RegisterServicesFromAssemblies(currentAssembly);
+    config.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
+builder.Services.AddValidatorsFromAssembly(currentAssembly);
+
+builder.Services.AddCarter();
+builder.Services.AddMarten(options => { options.Connection(builder.Configuration.GetConnectionString("Database")!); })
+    .UseLightweightSessions();
 
 var app = builder.Build();
 
